@@ -3,8 +3,8 @@ import * as Blockly from 'blockly';
 // 1. CONSTANTES Y UTILIDADES
 
 // Definimos pines para los menús desplegables
-const DIGITAL_PINS_DROPDOWN: any = Array.from({ length: 14 }, (_, i) => [i.toString(), i.toString()]);
-const ANALOG_PINS_DROPDOWN: any = Array.from({ length: 6 }, (_, i) => [`A${i}`, `A${i}`]);
+const DIGITAL_PINS_DROPDOWN: any = Array.from({ length: 25 }, (_, i) => [i.toString(), i.toString()]);
+const ANALOG_PINS_DROPDOWN: any = Array.from({ length: 12 }, (_, i) => [`A${i}`, `A${i}`]);
 const MOTOR_DROPDOWN: any = [
   ['Motor1', 'motor1'],
   ['Motor2', 'motor2'],
