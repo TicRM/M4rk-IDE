@@ -15,7 +15,8 @@ ENV PATH="/root/bin:${PATH}"
 # Initialize Arduino CLI and install cores
 RUN arduino-cli config init && \
     arduino-cli core update-index && \
-    arduino-cli core install arduino:avr
+    arduino-cli core install arduino:avr && \
+    arduino-cli lib install Servo
 
 # Create app directory
 WORKDIR /app
