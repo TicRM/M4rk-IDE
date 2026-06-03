@@ -69,6 +69,10 @@ interface IDEContextType {
   // --- 6. PESTAÑAS ---
   activeTab: 'code' | 'console' | 'serial';
   setActiveTab: (tab: 'code' | 'console' | 'serial') => void;
+  
+  // --- 7. I18N ---
+  language: 'en' | 'es';
+  setLanguage: (lang: 'en' | 'es') => void;
 }
 
 const IDEContext = createContext<IDEContextType | null>(null);
@@ -112,6 +116,17 @@ export const IDEProvider: React.FC<IDEProviderProps> = ({ children }) => {
   const [serialMessages, setSerialMessages] = useState<SerialMessage[]>([]);
   const [serialBaudRate, setSerialBaudRate] = useState(9600);
   const [activeTab, setActiveTab] = useState<'code' | 'console' | 'serial'>('code');
+
+  // I18N State
+  const [language, setLanguageState] = useState<'en' | 'es'>(() => {
+    const saved = localStorage.getItem('m4rk_language');
+    return (saved === 'es' || saved === 'en') ? saved : 'en';
+  });
+
+  const setLanguage = useCallback((lang: 'en' | 'es') => {
+    setLanguageState(lang);
+    localStorage.setItem('m4rk_language', lang);
+  }, []);
 
   const addConsoleMessage = useCallback((type: ConsoleMessage['type'], message: string) => {
     setConsoleMessages(prev => [
@@ -282,7 +297,9 @@ export const IDEProvider: React.FC<IDEProviderProps> = ({ children }) => {
     renameProject,
     importProject,
     activeTab,
-    setActiveTab
+    setActiveTab,
+    language,
+    setLanguage
   };
 
   return (

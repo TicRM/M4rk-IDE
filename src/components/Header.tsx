@@ -1,10 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useIDE } from '@/contexts/IDEContext';
-import { Pencil, Check, X } from 'lucide-react';
+import { Pencil, Check, X, Globe } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header: React.FC = () => {
-  const { currentProject, renameProject } = useIDE();
+  const { currentProject, renameProject, language, setLanguage } = useIDE();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -113,6 +119,32 @@ const Header: React.FC = () => {
             )}
           </button>
         )}
+      </div>
+
+      {/* Language Selector */}
+      <div className="ml-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-2 rounded-xl hover:bg-muted/50 transition-colors text-muted-foreground hover:text-foreground flex items-center gap-1">
+              <Globe className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase">{language}</span>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32 ide-panel border-none p-1">
+            <DropdownMenuItem 
+              onClick={() => setLanguage('en')}
+              className={`rounded-lg font-bold text-sm cursor-pointer ${language === 'en' ? 'bg-primary/10 text-primary' : ''}`}
+            >
+              English
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => setLanguage('es')}
+              className={`rounded-lg font-bold text-sm cursor-pointer ${language === 'es' ? 'bg-primary/10 text-primary' : ''}`}
+            >
+              Español
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );

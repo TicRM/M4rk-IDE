@@ -7,11 +7,12 @@ import SerialMonitor from '@/components/SerialMonitor';
 import Toolbar from '@/components/Toolbar';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { Code, Terminal, Radio, Blocks } from 'lucide-react';
+import { Code, Terminal, Radio, Blocks, Layers } from 'lucide-react';
 import * as Blockly from 'blockly';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getTranslation } from '@/lib/i18n';
 
 const IDEContent: React.FC = () => {
   const { 
@@ -24,7 +25,8 @@ const IDEContent: React.FC = () => {
     createNewProject,
     addConsoleMessage,
     selectedBoard,
-    importProject
+    importProject,
+    language
   } = useIDE();
   
   const isMobile = useIsMobile();
@@ -117,7 +119,7 @@ const IDEContent: React.FC = () => {
               }`}
             >
               <Blocks className="w-4 h-4" />
-              Bloques
+              {getTranslation(language, 'ui_blocks')}
             </button>
             <button
               onClick={() => setMobileView('code')}
@@ -128,7 +130,7 @@ const IDEContent: React.FC = () => {
               }`}
             >
               <Code className="w-4 h-4" />
-              Código
+              {getTranslation(language, 'ui_code')}
             </button>
           </div>
         </div>
@@ -160,9 +162,9 @@ const IDEContent: React.FC = () => {
                   <div className="px-2 pt-2 bg-gradient-to-b from-muted/30 to-transparent">
                     <TabsList className="bg-transparent h-auto p-0 w-full justify-start gap-1">
                       {[
-                        { value: 'code', icon: Code, label: 'Código' },
-                        { value: 'console', icon: Terminal, label: 'Consola' },
-                        { value: 'serial', icon: Radio, label: 'Monitor' },
+                        { value: 'code', icon: Code, label: getTranslation(language, 'ui_code') },
+                        { value: 'console', icon: Terminal, label: getTranslation(language, 'ui_console') },
+                        { value: 'serial', icon: Radio, label: getTranslation(language, 'ui_serial') },
                       ].map((tab) => (
                         <TabsTrigger 
                           key={tab.value}
@@ -208,7 +210,7 @@ const IDEContent: React.FC = () => {
     <div className="h-screen w-screen overflow-hidden bg-slate-100 flex flex-col">
       
       {/* TOOLBAR */}
-      <div className="w-full relative z-20 mb-4">
+      <div className="w-full relative z-20 mb-2 md:mb-4">
         <Toolbar 
           onSave={handleSave}
           onNewProject={handleNewProject}
@@ -227,7 +229,7 @@ const IDEContent: React.FC = () => {
         <ResizablePanelGroup direction="horizontal" className="h-full w-full">
           
           {/* BLOCKLY PANEL */}
-          <ResizablePanel defaultSize={60} minSize={35} className="p-3">
+          <ResizablePanel defaultSize={60} minSize={35} className="p-2 sm:p-3">
             <div className="h-full w-full ide-panel overflow-hidden relative group">
               <BlocklyEditor key={blocklyKey} initialXml={currentProject?.blocklyXml} />
             </div>
@@ -240,7 +242,7 @@ const IDEContent: React.FC = () => {
           />
 
           {/* CODE & CONSOLE PANEL */}
-          <ResizablePanel defaultSize={40} minSize={28} className="p-3 pl-0">
+          <ResizablePanel defaultSize={40} minSize={28} className="p-2 sm:p-3 pl-0 sm:pl-0">
             <div className="h-full w-full flex flex-col ide-panel overflow-hidden">
               
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="h-full flex flex-col">
@@ -249,9 +251,9 @@ const IDEContent: React.FC = () => {
                 <div className="px-3 pt-3 bg-gradient-to-b from-muted/30 to-transparent">
                   <TabsList className="bg-transparent h-auto p-0 w-full justify-start gap-1 flex-wrap">
                     {[
-                      { value: 'code', icon: Code, label: 'Código', color: 'primary' },
-                      { value: 'console', icon: Terminal, label: 'Consola', color: 'warning' },
-                      { value: 'serial', icon: Radio, label: 'Monitor', color: 'success' },
+                      { value: 'code', icon: Code, label: getTranslation(language, 'ui_code'), color: 'primary' },
+                      { value: 'console', icon: Terminal, label: getTranslation(language, 'ui_console'), color: 'warning' },
+                      { value: 'serial', icon: Radio, label: getTranslation(language, 'ui_serial'), color: 'success' },
                     ].map((tab) => (
                       <TabsTrigger 
                         key={tab.value}
@@ -316,7 +318,7 @@ const IDEContent: React.FC = () => {
 
       {/* STATUS BAR */}
       <motion.div 
-        className="toolbar-island mx-2 mt-3 justify-between text-xs font-bold text-muted-foreground"
+        className="toolbar-island mx-2 mt-2 sm:mt-3 mb-2 justify-between text-xs font-bold text-muted-foreground"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}

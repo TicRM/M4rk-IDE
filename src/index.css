@@ -714,7 +714,7 @@
 
 /* 1. Ocultar el carril de fondo completamente */
 .blocklyScrollbarBackground {
-  display: none !important; /* Más agresivo que fill:none para evitar clicks fantasma */
+  fill: transparent !important; /* En lugar de display: none para no romper la lógica de Blockly */
 }
 
 /* 2. Estilizar la manija (el botón que se mueve) */
@@ -743,4 +743,8 @@
 /* 4. Asegurar Z-Index correcto */
 .blocklyFlyoutScrollbar {
   z-index: 50;
+  display: none !important; /* Ocultamos el scrollbar del flyout si se queda pegado */
+}
+.blocklyFlyoutScrollbar:hover {
+  display: none !important;
 }

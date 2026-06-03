@@ -46,6 +46,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from './Header';
 import * as Blockly from 'blockly';
+import { getTranslation } from '@/lib/i18n';
 
 interface ToolbarProps {
   onSave: () => void;
@@ -74,7 +75,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
     loadProjects,
     addConsoleMessage,
     generatedCode,
-    setActiveTab
+    setActiveTab,
+    language
   } = useIDE();
 
   const [newProjectName, setNewProjectName] = React.useState('');
@@ -330,12 +332,12 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <DialogTrigger asChild>
               <button className="clay-btn gap-2 text-xs">
                 <FilePlus className="w-4 h-4 text-primary" />
-                <span className="hidden sm:inline">Nuevo</span>
+                <span className="hidden sm:inline">{getTranslation(language, 'ui_new')}</span>
               </button>
             </DialogTrigger>
             <DialogContent className="ide-panel border-none">
               <DialogHeader>
-                <DialogTitle className="text-xl font-black text-primary">Nuevo Proyecto</DialogTitle>
+                <DialogTitle className="text-xl font-black text-primary">{getTranslation(language, 'ui_new_project')}</DialogTitle>
                 <DialogDescription>
                   Crea un nuevo proyecto Arduino. Tu trabajo se guardará automáticamente.
                 </DialogDescription>
@@ -366,20 +368,20 @@ const Toolbar: React.FC<ToolbarProps> = ({
             <DropdownMenuTrigger asChild>
               <button className="clay-btn gap-2 text-xs">
                 <FolderOpen className="w-4 h-4 text-secondary" />
-                <span className="hidden sm:inline">Abrir</span>
+                <span className="hidden sm:inline">{getTranslation(language, 'ui_open')}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56 ide-panel border-none p-2">
               <DropdownMenuItem onClick={handleImportFromPC} className="rounded-xl font-medium">
                 <HardDrive className="w-4 h-4 mr-2 text-primary" />
-                Abrir desde PC (.arduide)
+                {getTranslation(language, 'ui_open_pc')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {projects.length === 0 ? (
-                <DropdownMenuItem disabled className="rounded-xl">Sin proyectos recientes</DropdownMenuItem>
+                <DropdownMenuItem disabled className="rounded-xl">{getTranslation(language, 'ui_no_recent')}</DropdownMenuItem>
               ) : (
                 <>
-                  <div className="px-2 py-1 text-xs text-muted-foreground font-bold">Proyectos recientes:</div>
+                  <div className="px-2 py-1 text-xs text-muted-foreground font-bold">{getTranslation(language, 'ui_recent')}</div>
                   {projects.slice(0, 5).map((project) => (
                     <DropdownMenuItem
                       key={project.id}
@@ -401,24 +403,24 @@ const Toolbar: React.FC<ToolbarProps> = ({
 
           <button onClick={onSave} className="clay-btn gap-2 text-xs">
             <Save className="w-4 h-4 text-success" />
-            <span className="hidden sm:inline">Guardar</span>
+            <span className="hidden sm:inline">{getTranslation(language, 'ui_save')}</span>
           </button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="clay-btn gap-2 text-xs">
                 <Download className="w-4 h-4 text-warning" />
-                <span className="hidden sm:inline">Exportar</span>
+                <span className="hidden sm:inline">{getTranslation(language, 'ui_export')}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56 ide-panel border-none p-2">
               <DropdownMenuItem onClick={handleExportToPC} className="rounded-xl font-medium">
                 <HardDrive className="w-4 h-4 mr-2 text-primary" />
-                Guardar en PC (.arduide)
+                {getTranslation(language, 'ui_save_pc')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleExportAsIno} className="rounded-xl font-medium">
                 <FileCode className="w-4 h-4 mr-2 text-success" />
-                Exportar código (.ino)
+                {getTranslation(language, 'ui_export_ino')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -467,7 +469,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             className="clay-btn clay-btn-warning gap-2 text-xs"
           >
             <Hammer className="w-4 h-4" />
-            <span className="hidden sm:inline">Compilar</span>
+            <span className="hidden sm:inline">{getTranslation(language, 'ui_compile')}</span>
           </button>
 
           <button
@@ -476,7 +478,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
             className="clay-btn clay-btn-primary gap-2 text-xs"
           >
             <Upload className="w-4 h-4" />
-            <span className="hidden sm:inline">Subir</span>
+            <span className="hidden sm:inline">{getTranslation(language, 'ui_upload')}</span>
           </button>
         </div>
       </div>
