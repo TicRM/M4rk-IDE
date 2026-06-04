@@ -60,7 +60,7 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
       previousLanguageRef.current = language;
       
       // Set Blockly core locale for standard blocks (math, logic, loops, etc)
-      Blockly.setLocale(language === 'es' ? Es : En);
+      Blockly.setLocale(language === 'es' ? Es as unknown as { [key: string]: string } : En as unknown as { [key: string]: string });
 
       // Update Blockly.Msg for custom blocks
       const dict = translations[language];
@@ -199,7 +199,7 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
     });
 
     // Set Blockly core locale for standard blocks on initial load
-    Blockly.setLocale(language === 'es' ? Es : En);
+    Blockly.setLocale(language === 'es' ? Es as unknown as { [key: string]: string } : En as unknown as { [key: string]: string });
 
     // Init dictionary for first load
     const dict = translations[language];

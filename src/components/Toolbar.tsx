@@ -416,7 +416,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                     <FolderOpen className="w-4 h-4 mr-2 text-secondary" />
                     <span>{getTranslation(language, 'ui_open')}</span>
                   </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent side="right" className="w-56 ide-panel border-none p-2">
+                  <DropdownMenuSubContent className="w-56 ide-panel border-none p-2">
                     <DropdownMenuItem onClick={handleImportFromPC} className="rounded-xl font-medium cursor-pointer">
                       <HardDrive className="w-4 h-4 mr-2 text-primary" />
                       {getTranslation(language, 'ui_open_pc')}
@@ -445,7 +445,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                     <Download className="w-4 h-4 mr-2 text-warning" />
                     <span>{getTranslation(language, 'ui_export')}</span>
                   </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent side="right" className="w-56 ide-panel border-none p-2">
+                  <DropdownMenuSubContent className="w-56 ide-panel border-none p-2">
                     <DropdownMenuItem onClick={handleExportToPC} className="rounded-xl font-medium cursor-pointer">
                       <HardDrive className="w-4 h-4 mr-2 text-primary" />
                       {getTranslation(language, 'ui_save_pc')}
@@ -551,7 +551,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   <FolderOpen className="w-4 h-4 mr-2 text-primary" />
                   <span>{getTranslation(language, 'ui_project')}</span>
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent side="left" className="w-56 ide-panel border-none p-2">
+                <DropdownMenuSubContent className="w-56 ide-panel border-none p-2">
                   <DropdownMenuItem onClick={() => setShowNewDialog(true)} className="rounded-xl font-medium cursor-pointer">
                     <FilePlus className="w-4 h-4 mr-2 text-primary" />
                     {getTranslation(language, 'ui_new')}
@@ -582,7 +582,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   <Cpu className="w-4 h-4 mr-2 text-primary" />
                   <span className="truncate">{selectedBoard.name}</span>
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent side="left" className="w-56 ide-panel border-none p-2 max-h-[300px] overflow-y-auto custom-scrollbar">
+                <DropdownMenuSubContent className="w-56 ide-panel border-none p-2 max-h-[300px] overflow-y-auto custom-scrollbar">
                   {ARDUINO_BOARDS.map((board) => (
                     <DropdownMenuItem
                       key={board.fqbn}
@@ -616,7 +616,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
                   <Globe className="w-4 h-4 mr-2 text-muted-foreground" />
                   <span>{language === 'es' ? 'Idioma' : 'Language'}</span>
                 </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent side="left" className="w-32 ide-panel border-none p-2">
+                <DropdownMenuSubContent className="w-32 ide-panel border-none p-2">
                   <DropdownMenuItem onClick={() => setLanguage('en')} className="rounded-xl font-medium cursor-pointer">
                     English
                   </DropdownMenuItem>
