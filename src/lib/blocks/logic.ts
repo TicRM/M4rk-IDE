@@ -9,7 +9,7 @@ export const defineLogicBlocks = () => {
       this.appendValueInput('TO_LOW').setCheck('Number').appendField('a min');
       this.appendValueInput('TO_HIGH').setCheck('Number').appendField('a max');
       this.setOutput(true, 'Number');
-      this.setColour('#59C059'); // Matemáticas (VexIQ Green)
+      this.setColour('#66BB6A'); // Matemáticas (VexIQ Green)
     }
   };
 
@@ -19,7 +19,7 @@ export const defineLogicBlocks = () => {
       this.appendValueInput('LOW').setCheck('Number').appendField('min');
       this.appendValueInput('HIGH').setCheck('Number').appendField('max');
       this.setOutput(true, 'Number');
-      this.setColour('#59C059');
+      this.setColour('#66BB6A');
     }
   };
 
@@ -27,7 +27,7 @@ export const defineLogicBlocks = () => {
     init: function () {
       this.appendDummyInput().appendField('"').appendField(new Blockly.FieldTextInput('Hello'), 'TEXT').appendField('"');
       this.setOutput(true, 'String');
-      this.setColour('#59C059');
+      this.setColour('#66BB6A');
     }
   };
 };

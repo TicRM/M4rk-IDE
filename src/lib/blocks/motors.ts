@@ -31,7 +31,7 @@ export const defineMotorBlocks = () => {
 
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#4C97FF'); // VexIQ Motor Blue
+      this.setColour('#5C9EFF');
       this.setTooltip('Configuración del motor L298N. EN controla la velocidad.');
     }
   };
@@ -50,7 +50,7 @@ export const defineMotorBlocks = () => {
 
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#4C97FF'); // VexIQ Motor Blue
+      this.setColour('#5C9EFF');
       this.setTooltip('Mueve el motor. Positivo hacia adelante, negativo en reversa.');
     }
   };
@@ -61,7 +61,25 @@ export const defineMotorBlocks = () => {
       this.appendDummyInput().appendField(new Blockly.FieldDropdown(MOTOR_DROPDOWN), 'MOTOR');
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#4C97FF');
+      this.setColour('#5C9EFF');
+    }
+  };
+
+  Blockly.Blocks['motor_control'] = {
+    init: function () {
+      this.appendDummyInput()
+        .appendField(Blockly.Msg['B_MOTOR_CONTROL'])
+        .appendField(new Blockly.FieldDropdown(MOTOR_DROPDOWN), 'MOTOR');
+
+      this.appendDummyInput()
+        .appendField(Blockly.Msg['B_MOTOR_SPEED'])
+        .appendField(new FieldSlider(100, -100, 100), 'SPEED')
+        .appendField('%');
+
+      this.setPreviousStatement(true, null);
+      this.setNextStatement(true, null);
+      this.setColour('#5C9EFF');
+      this.setTooltip(Blockly.Msg['B_MOTOR_CONTROL_TOOLTIP'] || 'Control the motor speed and direction.');
     }
   };
 
@@ -72,7 +90,7 @@ export const defineMotorBlocks = () => {
       this.appendDummyInput().appendField(Blockly.Msg['B_SERVO_AS']).appendField(new Blockly.FieldDropdown([['servo1', 'servo1'], ['servo2', 'servo2']]), 'SERVO');
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#4C97FF');
+      this.setColour('#5C9EFF');
     }
   };
 
@@ -84,7 +102,7 @@ export const defineMotorBlocks = () => {
       this.appendValueInput('ANGLE').setCheck('Number').appendField(Blockly.Msg['B_SERVO_WRITE']);
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#4C97FF');
+      this.setColour('#5C9EFF');
     }
   };
 };
@@ -115,6 +133,21 @@ export const defineMotorGenerators = (Arduino: any) => {
       `digitalWrite(${name}_IN2, ${isForward ? 'LOW' : 'HIGH'});\n` +
       `analogWrite(${name}_EN, map(${absSpeed}, 0, 100, 0, 255));\n`;
     return code;
+  };
+
+  Arduino.forBlock['motor_control'] = function (block: Blockly.Block) {
+    const name = Arduino.getVariableName(block.getFieldValue('MOTOR'));
+    const speed = block.getFieldValue('SPEED');
+    const speedNum = parseInt(speed, 10);
+    const isForward = speedNum >= 0;
+    const absSpeed = Math.abs(speedNum);
+
+    return `digitalWrite(${name}_IN1, ${isForward ? 'HIGH' : 'LOW'});
+` +
+      `digitalWrite(${name}_IN2, ${isForward ? 'LOW' : 'HIGH'});
+` +
+      `analogWrite(${name}_EN, map(${absSpeed}, 0, 100, 0, 255));
+`;
   };
 
   Arduino.forBlock['motor_stop'] = function (block: Blockly.Block) {

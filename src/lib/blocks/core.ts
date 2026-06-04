@@ -113,7 +113,7 @@ export const defineCoreBlocks = () => {
       this.appendDummyInput().appendField(Blockly.Msg['B_COM_SETUP_LOOP']);
       this.appendStatementInput('SETUP').setCheck(null).appendField(Blockly.Msg['B_COM_SETUP']);
       this.appendStatementInput('LOOP').setCheck(null).appendField(Blockly.Msg['B_COM_LOOP']);
-      this.setColour('#FFBF00'); // Eventos style
+      this.setColour('#FFD54F'); // Eventos style
       this.setTooltip('Estructura principal con setup y loop');
     }
   };

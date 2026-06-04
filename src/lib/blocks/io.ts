@@ -9,7 +9,7 @@ export const defineIOBlocks = () => {
       this.appendDummyInput().appendField(Blockly.Msg['B_IO_MODE']).appendField(new Blockly.FieldDropdown([['INPUT', 'INPUT'], ['OUTPUT', 'OUTPUT'], ['INPUT_PULLUP', 'INPUT_PULLUP']]), 'MODE');
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#9966FF'); // Hardware IO
+      this.setColour('#6C63D9'); // Hardware IO
     }
   };
 
@@ -28,7 +28,7 @@ export const defineIOBlocks = () => {
 
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -39,7 +39,7 @@ export const defineIOBlocks = () => {
         .appendField(Blockly.Msg['B_IO_READ_D']);
 
       this.setOutput(true, "Number");
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -55,7 +55,7 @@ export const defineIOBlocks = () => {
 
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -66,7 +66,7 @@ export const defineIOBlocks = () => {
         .appendField(Blockly.Msg['B_IO_READ_A']);
 
       this.setOutput(true, "Number");
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -75,7 +75,7 @@ export const defineIOBlocks = () => {
       this.appendValueInput("TIME").setCheck("Number").appendField("Esperar (ms)");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -84,7 +84,7 @@ export const defineIOBlocks = () => {
       this.appendValueInput("TIME").setCheck("Number").appendField("Esperar (us)");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -92,7 +92,7 @@ export const defineIOBlocks = () => {
     init: function () {
       this.appendDummyInput().appendField('millis()');
       this.setOutput(true, 'Number');
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -100,7 +100,7 @@ export const defineIOBlocks = () => {
     init: function () {
       this.appendDummyInput().appendField('micros()');
       this.setOutput(true, 'Number');
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -108,7 +108,7 @@ export const defineIOBlocks = () => {
     init: function () {
       this.appendDummyInput().appendField('pin').appendField(new Blockly.FieldDropdown(DIGITAL_PINS_DROPDOWN), 'PIN');
       this.setOutput(true, 'Number');
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -116,7 +116,7 @@ export const defineIOBlocks = () => {
     init: function () {
       this.appendDummyInput().appendField('LED_BUILTIN');
       this.setOutput(true, 'Number');
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -124,7 +124,7 @@ export const defineIOBlocks = () => {
     init: function () {
       this.appendDummyInput().appendField(new Blockly.FieldDropdown([['HIGH', 'HIGH'], ['LOW', 'LOW']]), 'VALUE');
       this.setOutput(true, 'Number');
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -135,7 +135,7 @@ export const defineIOBlocks = () => {
       this.appendValueInput('DURATION').setCheck('Number').appendField('duration (ms)');
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 
@@ -144,7 +144,7 @@ export const defineIOBlocks = () => {
       this.appendValueInput('PIN').setCheck('Number').appendField('noTone pin');
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#9966FF');
+      this.setColour('#6C63D9');
     }
   };
 };

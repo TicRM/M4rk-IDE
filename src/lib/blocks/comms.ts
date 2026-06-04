@@ -11,7 +11,7 @@ export const defineCommsBlocks = () => {
       this.appendValueInput("PASS").setCheck("String").appendField(Blockly.Msg['B_COM_WIFI_PASS']);
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#FFBF00'); // Conectividad / Eventos (VexIQ Yellow)
+      this.setColour('#FFA040'); // Conectividad / Eventos (VexIQ Yellow)
     }
   };
 
@@ -19,7 +19,7 @@ export const defineCommsBlocks = () => {
     init: function () {
       this.appendDummyInput().appendField(Blockly.Msg['B_COM_WIFI_CHECK']);
       this.setOutput(true, "Boolean");
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -32,7 +32,7 @@ export const defineCommsBlocks = () => {
         .appendField("Baud").appendField(new Blockly.FieldDropdown([['9600', '9600'], ['38400', '38400']]), 'BAUD');
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -40,7 +40,7 @@ export const defineCommsBlocks = () => {
     init: function () {
       this.appendDummyInput().appendField(Blockly.Msg['B_COM_BT_READ']);
       this.setOutput(true, "String");
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -49,7 +49,7 @@ export const defineCommsBlocks = () => {
       this.appendValueInput("DATA").setCheck(null).appendField(Blockly.Msg['B_COM_BT_SEND']);
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -59,7 +59,7 @@ export const defineCommsBlocks = () => {
       this.appendDummyInput().appendField(Blockly.Msg['B_COM_SER_BEGIN']).appendField(new Blockly.FieldDropdown([['9600', '9600'], ['115200', '115200']]), 'BAUD');
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -68,7 +68,7 @@ export const defineCommsBlocks = () => {
       this.appendValueInput('VALUE').setCheck(null).appendField(Blockly.Msg['B_COM_SER_PRINT']);
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -77,7 +77,7 @@ export const defineCommsBlocks = () => {
       this.appendValueInput('VALUE').setCheck(null).appendField(Blockly.Msg['B_COM_SER_PRINTLN']);
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -85,7 +85,7 @@ export const defineCommsBlocks = () => {
     init: function () {
       this.appendDummyInput().appendField('Serial.available()');
       this.setOutput(true, 'Number');
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -93,7 +93,7 @@ export const defineCommsBlocks = () => {
     init: function () {
       this.appendDummyInput().appendField('Serial.read()');
       this.setOutput(true, 'Number');
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -103,7 +103,7 @@ export const defineCommsBlocks = () => {
       this.appendDummyInput().appendField(Blockly.Msg['B_I2C_BEGIN']);
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
       this.setTooltip('Inicializa el bus I2C (Wire).');
     }
   };
@@ -115,7 +115,7 @@ export const defineCommsBlocks = () => {
       this.appendValueInput('BYTES').setCheck('Number').appendField(Blockly.Msg['B_I2C_BYTES']);
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -123,7 +123,7 @@ export const defineCommsBlocks = () => {
     init: function () {
       this.appendDummyInput().appendField(Blockly.Msg['B_I2C_READ']);
       this.setOutput(true, 'Number');
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -133,7 +133,7 @@ export const defineCommsBlocks = () => {
       this.appendValueInput('ADDRESS').setCheck('Number').appendField("Address");
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -142,7 +142,7 @@ export const defineCommsBlocks = () => {
       this.appendValueInput('VALUE').setCheck(null).appendField(Blockly.Msg['B_I2C_WRITE']);
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 
@@ -151,7 +151,7 @@ export const defineCommsBlocks = () => {
       this.appendDummyInput().appendField(Blockly.Msg['B_I2C_END_TX']);
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#FFBF00');
+      this.setColour('#FFA040');
     }
   };
 };

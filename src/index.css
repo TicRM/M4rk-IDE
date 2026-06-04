@@ -104,10 +104,6 @@
       hsl(330 85% 70%)
     );
   }
-
-  .dark {
-    /* Modo oscuro deshabilitado - mantenemos estilo infantil brillante */
-  }
 }
 
 @layer base {

@@ -21,7 +21,7 @@ export const defineSensorBlocks = () => {
 
       this.setPreviousStatement(true, null);
       this.setNextStatement(true, null);
-      this.setColour('#5CB1D6'); // Sensores
+      this.setColour('#4FC3B8'); // Sensores
       this.setTooltip('Configura los pines del sensor ultrasónico.');
     }
   };
@@ -35,7 +35,7 @@ export const defineSensorBlocks = () => {
         .appendField(new Blockly.FieldDropdown([[Blockly.Msg['B_SNS_US_CM'], "CM"], [Blockly.Msg['B_SNS_US_INCH'], "INCH"]]), "UNIT");
 
       this.setOutput(true, "Number");
-      this.setColour('#5CB1D6');
+      this.setColour('#4FC3B8');
       this.setTooltip('Obtiene la distancia del sensor en la unidad seleccionada.');
     }
   };
@@ -52,7 +52,7 @@ export const defineSensorBlocks = () => {
 
       this.appendDummyInput().appendField(Blockly.Msg['B_SNS_COMPONENT']).appendField(new Blockly.FieldDropdown([[Blockly.Msg['B_SNS_RED'], 'RED'], [Blockly.Msg['B_SNS_GREEN'], 'GREEN'], [Blockly.Msg['B_SNS_BLUE'], 'BLUE']]), 'COLOR_COMP');
       this.setOutput(true, "Number");
-      this.setColour('#5CB1D6');
+      this.setColour('#4FC3B8');
     }
   };
 
@@ -61,7 +61,7 @@ export const defineSensorBlocks = () => {
       this.appendDummyInput().appendField(Blockly.Msg['B_SNS_SOUND_SENSOR']);
       this.appendDummyInput().appendField(Blockly.Msg['B_SNS_PIN']).appendField(new Blockly.FieldDropdown(ANALOG_PINS_DROPDOWN), 'PIN');
       this.setOutput(true, "Number");
-      this.setColour('#5CB1D6');
+      this.setColour('#4FC3B8');
     }
   };
 };

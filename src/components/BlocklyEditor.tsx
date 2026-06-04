@@ -170,7 +170,31 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
 
     // Define Arduino blocks
     defineArduinoBlocks();
-    
+
+    // Apply built-in block style overrides so toolbox categories keep consistent colours
+    const blockStyleOverrides: Record<string, string> = {
+      controls_if: 'control_blocks',
+      controls_ifelse: 'control_blocks',
+      controls_if_elseif: 'control_blocks',
+      controls_repeat_ext: 'control_blocks',
+      controls_whileUntil: 'control_blocks',
+      controls_for: 'control_blocks',
+      logic_compare: 'math_blocks',
+      logic_operation: 'math_blocks',
+      logic_boolean: 'math_blocks',
+      logic_negate: 'math_blocks',
+      variables_get: 'variable_blocks',
+      variables_set: 'variable_blocks',
+      procedures_defnoreturn: 'procedure_blocks',
+      procedures_defreturn: 'procedure_blocks',
+      procedures_ifreturn: 'procedure_blocks',
+    };
+    Object.entries(blockStyleOverrides).forEach(([blockType, styleName]) => {
+      if (Blockly.Blocks[blockType]) {
+        Blockly.Blocks[blockType].style = styleName;
+      }
+    });
+
     // Create Generator
     generatorRef.current = createArduinoGenerator();
 
@@ -190,6 +214,28 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
         insertionMarkerOpacity: 0.4,
         scrollbarOpacity: 0.7,
         cursorColour: '#06b6d4',
+      },
+      blockStyles: {
+        control_blocks: {
+          colourPrimary: '#FF8A80',
+          colourSecondary: '#F87171',
+          colourTertiary: '#FECACA',
+        },
+        math_blocks: {
+          colourPrimary: '#66BB6A',
+          colourSecondary: '#4ADE80',
+          colourTertiary: '#D9F99D',
+        },
+        variable_blocks: {
+          colourPrimary: '#EC4899',
+          colourSecondary: '#DB2777',
+          colourTertiary: '#FBCFE8',
+        },
+        procedure_blocks: {
+          colourPrimary: '#C59BF0',
+          colourSecondary: '#A855F7',
+          colourTertiary: '#E9D5FF',
+        },
       },
       fontStyle: {
         family: 'Nunito, Quicksand, sans-serif',
@@ -483,3 +529,7 @@ export const getWorkspaceXml = (workspace: Blockly.WorkspaceSvg): string => {
   const xml = Blockly.Xml.workspaceToDom(workspace);
   return Blockly.Xml.domToText(xml);
 };
+
+
+
+
