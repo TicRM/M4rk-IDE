@@ -640,7 +640,7 @@
   
   /* Adjust status bar for mobile */
   .toolbar-island.justify-between {
-    @apply flex-col gap-2 text-center;
+    @apply flex-row items-center gap-1;
   }
 }
 

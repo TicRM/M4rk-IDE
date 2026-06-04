@@ -8,9 +8,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Header: React.FC = () => {
   const { currentProject, renameProject, language, setLanguage } = useIDE();
+  const isMobile = useIsMobile();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -61,13 +63,13 @@ const Header: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink min-w-0">
       {/* Logo */}
       <div className="flex items-center gap-2">
         <img 
           src="/favicon.ico" 
           alt="ArduIDE Logo" 
-          className="w- h-8 object-contain"
+          className="w-8 h-8 object-contain"
         />
       </div>
 
@@ -109,7 +111,7 @@ const Header: React.FC = () => {
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-muted/50 transition-colors group"
             title={currentProject ? 'Click para editar nombre' : 'Guarda el proyecto primero'}
           >
-            <span className={`font-bold text-sm truncate max-w-32 sm:max-w-48 ${
+            <span className={`font-bold text-sm truncate max-w-[85px] min-[400px]:max-w-32 sm:max-w-48 ${
               currentProject ? 'text-foreground' : 'text-muted-foreground italic'
             }`}>
               📁 {displayName}
@@ -121,31 +123,33 @@ const Header: React.FC = () => {
         )}
       </div>
 
-      {/* Language Selector */}
-      <div className="ml-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="p-2 rounded-xl hover:bg-muted/50 transition-colors text-muted-foreground hover:text-foreground flex items-center gap-1">
-              <Globe className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase">{language}</span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-32 ide-panel border-none p-1">
-            <DropdownMenuItem 
-              onClick={() => setLanguage('en')}
-              className={`rounded-lg font-bold text-sm cursor-pointer ${language === 'en' ? 'bg-primary/10 text-primary' : ''}`}
-            >
-              English
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => setLanguage('es')}
-              className={`rounded-lg font-bold text-sm cursor-pointer ${language === 'es' ? 'bg-primary/10 text-primary' : ''}`}
-            >
-              Español
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      {/* Language Selector - only on desktop */}
+      {!isMobile && (
+        <div className="ml-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 rounded-xl hover:bg-muted/50 transition-colors text-muted-foreground hover:text-foreground flex items-center gap-1">
+                <Globe className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase">{language}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-32 ide-panel border-none p-1">
+              <DropdownMenuItem 
+                onClick={() => setLanguage('en')}
+                className={`rounded-lg font-bold text-sm cursor-pointer ${language === 'en' ? 'bg-primary/10 text-primary' : ''}`}
+              >
+                English
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setLanguage('es')}
+                className={`rounded-lg font-bold text-sm cursor-pointer ${language === 'es' ? 'bg-primary/10 text-primary' : ''}`}
+              >
+                Español
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
     </div>
   );
 };

@@ -8,13 +8,21 @@ export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined);
 
   React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`);
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
+    const checkIsMobile = () => {
+      const isPortraitMobile = window.innerWidth < MOBILE_BREAKPOINT;
+      const isLandscapeMobile = window.innerHeight < 500 && window.innerWidth < 950;
+      return isPortraitMobile || isLandscapeMobile;
     };
-    mql.addEventListener("change", onChange);
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT);
-    return () => mql.removeEventListener("change", onChange);
+
+    const onChange = () => {
+      setIsMobile(checkIsMobile());
+    };
+    
+    // Listen to resize to handle orientation changes
+    window.addEventListener("resize", onChange);
+    setIsMobile(checkIsMobile());
+    
+    return () => window.removeEventListener("resize", onChange);
   }, []);
 
   return !!isMobile;

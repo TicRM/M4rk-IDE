@@ -17,6 +17,9 @@ export const translations = {
     ui_export_ino: "Export code (.ino)",
     ui_recent: "Recent projects:",
     ui_no_recent: "No recent projects",
+    ui_project: "Project",
+    ui_collapse: "Collapse",
+    ui_expand: "Expand",
 
     // Toolbox Categories
     cat_motors: "Motors",
@@ -114,6 +117,9 @@ export const translations = {
     ui_export_ino: "Exportar código (.ino)",
     ui_recent: "Proyectos recientes:",
     ui_no_recent: "Sin proyectos recientes",
+    ui_project: "Proyecto",
+    ui_collapse: "Contraer",
+    ui_expand: "Expandir",
 
     // Toolbox Categories
     cat_motors: "Motores",

@@ -5,6 +5,8 @@ import * as Es from 'blockly/msg/es';
 import { defineArduinoBlocks, createArduinoGenerator, arduinoToolbox } from '@/lib/blocks';
 import { useIDE } from '@/contexts/IDEContext';
 import { translations, Language } from '@/lib/i18n';
+import { Blocks } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface BlocklyEditorProps {
   onCodeChange?: (code: string) => void;
@@ -18,6 +20,25 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
   const isInitializedRef = useRef(false);
   const { setGeneratedCode, addConsoleMessage, language } = useIDE();
   const previousLanguageRef = useRef<Language>(language);
+  const [isToolboxVisible, setIsToolboxVisible] = useState(true);
+  const isMobile = useIsMobile();
+
+  const toggleToolbox = useCallback(() => {
+    if (workspaceRef.current) {
+      const toolbox = workspaceRef.current.getToolbox();
+      if (toolbox) {
+        const nextVisible = !isToolboxVisible;
+        toolbox.setVisible(nextVisible);
+        setIsToolboxVisible(nextVisible);
+        // Force resize so the workspace adapts to the new width
+        setTimeout(() => {
+          if (workspaceRef.current) {
+            Blockly.svgResize(workspaceRef.current);
+          }
+        }, 50);
+      }
+    }
+  }, [isToolboxVisible]);
 
   const generateCode = useCallback(() => {
     if (!workspaceRef.current || !generatorRef.current) return;
@@ -276,7 +297,7 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
       zoom: {
         controls: true,
         wheel: true,
-        startScale: 1.0,
+        startScale: isMobile ? 0.75 : 1.0,
         maxScale: 3,
         minScale: 0.3,
         scaleSpeed: 1.2,
@@ -430,11 +451,28 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
   }, [initialXml, generateCode, forceResize]);
 
   return (
-    <div 
-      ref={containerRef} 
-      className="w-full h-full blockly-container bg-card"
-      style={{ minHeight: '400px' }}
-    />
+    <div className="w-full h-full relative z-0">
+      <div 
+        ref={containerRef} 
+        className="w-full h-full blockly-container bg-card"
+      />
+      {/* Floating Toggle Toolbox Button - Sleek FAB for mobile/tablet */}
+      {isMobile && (
+        <div className="absolute right-4 top-4 z-[99]">
+          <button
+            onClick={toggleToolbox}
+            className={`flex items-center justify-center w-11 h-11 rounded-2xl shadow-lg border-2 hover:scale-105 active:scale-95 transition-all ${
+              isToolboxVisible 
+                ? 'bg-card text-muted-foreground border-border/50 shadow-md' 
+                : 'bg-primary text-primary-foreground border-primary/30 glow-primary'
+            }`}
+            title={isToolboxVisible ? 'Ocultar Categorías' : 'Mostrar Categorías'}
+          >
+            <Blocks className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 
