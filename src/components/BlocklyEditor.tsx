@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 import * as Blockly from 'blockly';
 import * as En from 'blockly/msg/en';
 import * as Es from 'blockly/msg/es';
-import { defineArduinoBlocks, createArduinoGenerator, arduinoToolbox } from '@/lib/blocks';
+import { defineArduinoBlocks, createArduinoGenerator, arduinoToolbox, registerTypedVariables } from '@/lib/blocks';
 import { useIDE } from '@/contexts/IDEContext';
 import { translations, Language } from '@/lib/i18n';
 import { Blocks } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import BlocklyDialogs from '@/components/BlocklyDialogs';
 
 interface BlocklyEditorProps {
   onCodeChange?: (code: string) => void;
@@ -45,7 +46,7 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
     
     try {
       generatorRef.current.init(workspaceRef.current);
-      const code = generatorRef.current.workspaceToCode(workspaceRef.current);
+      const code: string = generatorRef.current.workspaceToCode(workspaceRef.current) ?? '';
       setGeneratedCode(code);
       onCodeChange?.(code);
     } catch (error) {
@@ -132,6 +133,23 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
       Blockly.Msg['B_COM_SER_BEGIN'] = dict.b_com_ser_begin;
       Blockly.Msg['B_COM_SER_PRINT'] = dict.b_com_ser_print;
       Blockly.Msg['B_COM_SER_PRINTLN'] = dict.b_com_ser_println;
+      Blockly.Msg['B_COM_BT_READ_NUM'] = dict.b_com_bt_read_num;
+      Blockly.Msg['B_COM_SER_READ_TEXT'] = dict.b_com_ser_read_text;
+      Blockly.Msg['B_COM_SER_READ_NUM'] = dict.b_com_ser_read_num;
+      Blockly.Msg['B_COM_SER_READ_DEC'] = dict.b_com_ser_read_dec;
+      Blockly.Msg['B_COM_SER_READ_CHAR'] = dict.b_com_ser_read_char;
+      Blockly.Msg['B_COM_SER_HAS_DATA'] = dict.b_com_ser_has_data;
+      Blockly.Msg['B_COM_BT_READ_DEC'] = dict.b_com_bt_read_dec;
+      Blockly.Msg['B_COM_BT_READ_CHAR'] = dict.b_com_bt_read_char;
+      Blockly.Msg['B_COM_BT_HAS_DATA'] = dict.b_com_bt_has_data;
+      Blockly.Msg['M4RK_VAR_BTN_NUMBER'] = dict.var_btn_number;
+      Blockly.Msg['M4RK_VAR_BTN_DECIMAL'] = dict.var_btn_decimal;
+      Blockly.Msg['M4RK_VAR_BTN_TEXT'] = dict.var_btn_text;
+      Blockly.Msg['M4RK_VAR_BTN_BOOL'] = dict.var_btn_bool;
+      Blockly.Msg['M4RK_VAR_TYPE_NUMBER'] = dict.var_type_number;
+      Blockly.Msg['M4RK_VAR_TYPE_DECIMAL'] = dict.var_type_decimal;
+      Blockly.Msg['M4RK_VAR_TYPE_TEXT'] = dict.var_type_text;
+      Blockly.Msg['M4RK_VAR_TYPE_BOOL'] = dict.var_type_bool;
       Blockly.Msg['B_I2C_BEGIN'] = dict.b_i2c_begin;
       Blockly.Msg['B_I2C_REQ'] = dict.b_i2c_req;
       Blockly.Msg['B_I2C_BYTES'] = dict.b_i2c_bytes;
@@ -185,6 +203,7 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
       logic_negate: 'math_blocks',
       variables_get: 'variable_blocks',
       variables_set: 'variable_blocks',
+      math_change: 'variable_blocks',
       procedures_defnoreturn: 'procedure_blocks',
       procedures_defreturn: 'procedure_blocks',
       procedures_ifreturn: 'procedure_blocks',
@@ -317,6 +336,23 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
     Blockly.Msg['B_COM_SER_BEGIN'] = dict.b_com_ser_begin;
     Blockly.Msg['B_COM_SER_PRINT'] = dict.b_com_ser_print;
     Blockly.Msg['B_COM_SER_PRINTLN'] = dict.b_com_ser_println;
+    Blockly.Msg['B_COM_BT_READ_NUM'] = dict.b_com_bt_read_num;
+    Blockly.Msg['B_COM_SER_READ_TEXT'] = dict.b_com_ser_read_text;
+    Blockly.Msg['B_COM_SER_READ_NUM'] = dict.b_com_ser_read_num;
+    Blockly.Msg['B_COM_SER_READ_DEC'] = dict.b_com_ser_read_dec;
+    Blockly.Msg['B_COM_SER_READ_CHAR'] = dict.b_com_ser_read_char;
+    Blockly.Msg['B_COM_SER_HAS_DATA'] = dict.b_com_ser_has_data;
+    Blockly.Msg['B_COM_BT_READ_DEC'] = dict.b_com_bt_read_dec;
+    Blockly.Msg['B_COM_BT_READ_CHAR'] = dict.b_com_bt_read_char;
+    Blockly.Msg['B_COM_BT_HAS_DATA'] = dict.b_com_bt_has_data;
+    Blockly.Msg['M4RK_VAR_BTN_NUMBER'] = dict.var_btn_number;
+    Blockly.Msg['M4RK_VAR_BTN_DECIMAL'] = dict.var_btn_decimal;
+    Blockly.Msg['M4RK_VAR_BTN_TEXT'] = dict.var_btn_text;
+    Blockly.Msg['M4RK_VAR_BTN_BOOL'] = dict.var_btn_bool;
+    Blockly.Msg['M4RK_VAR_TYPE_NUMBER'] = dict.var_type_number;
+    Blockly.Msg['M4RK_VAR_TYPE_DECIMAL'] = dict.var_type_decimal;
+    Blockly.Msg['M4RK_VAR_TYPE_TEXT'] = dict.var_type_text;
+    Blockly.Msg['M4RK_VAR_TYPE_BOOL'] = dict.var_type_bool;
     Blockly.Msg['B_I2C_BEGIN'] = dict.b_i2c_begin;
     Blockly.Msg['B_I2C_REQ'] = dict.b_i2c_req;
     Blockly.Msg['B_I2C_BYTES'] = dict.b_i2c_bytes;
@@ -358,6 +394,9 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
     });
 
     isInitializedRef.current = true;
+
+    // Categoría Variables con tipo (Número, Decimal, Texto, Verdadero/Falso)
+    registerTypedVariables(workspaceRef.current);
 
     // Load initial XML or default blocks
     if (!initialXml) {
@@ -502,6 +541,8 @@ const BlocklyEditor: React.FC<BlocklyEditorProps> = ({ onCodeChange, initialXml 
         ref={containerRef} 
         className="w-full h-full blockly-container bg-card"
       />
+      {/* Diálogos propios para crear/renombrar variables (en lugar de los del navegador) */}
+      <BlocklyDialogs />
       {/* Floating Toggle Toolbox Button - Sleek FAB for mobile/tablet */}
       {isMobile && (
         <div className="absolute right-4 top-4 z-[99]">

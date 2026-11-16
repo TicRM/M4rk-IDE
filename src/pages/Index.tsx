@@ -11,9 +11,26 @@ import { Code, Terminal, Radio, Blocks, Layers, ChevronRight, ChevronLeft } from
 import { ImperativePanelHandle } from 'react-resizable-panels';
 import * as Blockly from 'blockly';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getTranslation } from '@/lib/i18n';
+
+// Panel que permanece montado aunque no esté visible (visibility: hidden conserva
+// su tamaño, el scroll y el estado interno, p. ej. la conexión del monitor serial).
+const KeepAlivePane: React.FC<{ active: boolean; className?: string; children: React.ReactNode }> = ({
+  active,
+  className = '',
+  children,
+}) => (
+  <div
+    aria-hidden={!active}
+    className={`absolute inset-0 transition-opacity duration-200 ${
+      active ? 'opacity-100 visible z-10' : 'opacity-0 invisible pointer-events-none z-0'
+    } ${className}`}
+  >
+    {children}
+  </div>
+);
 
 const IDEContent: React.FC = () => {
   const { 
@@ -129,56 +146,20 @@ const IDEContent: React.FC = () => {
 
         {/* CONTENT AREA - takes remaining height, fully clipped */}
         <div className="flex-1 min-h-0 px-1 pb-1 overflow-hidden relative">
-          <AnimatePresence mode="wait">
-            {activeTabMobile === 'blocks' && (
-              <motion.div
-                key="blocks"
-                className="absolute inset-0 ide-panel overflow-hidden"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.15 }}
-              >
-                <BlocklyEditor key={blocklyKey} initialXml={currentProject?.blocklyXml} />
-              </motion.div>
-            )}
-            {activeTabMobile === 'code' && (
-              <motion.div
-                key="code"
-                className="absolute inset-0 ide-panel overflow-hidden bg-card"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.15 }}
-              >
-                <CodePanel />
-              </motion.div>
-            )}
-            {activeTabMobile === 'console' && (
-              <motion.div
-                key="console"
-                className="absolute inset-0 ide-panel overflow-hidden bg-card"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.15 }}
-              >
-                <ConsolePanel />
-              </motion.div>
-            )}
-            {activeTabMobile === 'serial' && (
-              <motion.div
-                key="serial"
-                className="absolute inset-0 ide-panel overflow-hidden bg-card"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.15 }}
-              >
-                <SerialMonitor />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Las 4 vistas quedan montadas y solo se ocultan: así no se pierden los bloques,
+              la conexión serial ni lo escrito al cambiar de pestaña */}
+          <KeepAlivePane active={activeTabMobile === 'blocks'} className="ide-panel overflow-hidden">
+            <BlocklyEditor key={blocklyKey} initialXml={currentProject?.blocklyXml} />
+          </KeepAlivePane>
+          <KeepAlivePane active={activeTabMobile === 'code'} className="ide-panel overflow-hidden bg-card">
+            <CodePanel />
+          </KeepAlivePane>
+          <KeepAlivePane active={activeTabMobile === 'console'} className="ide-panel overflow-hidden bg-card">
+            <ConsolePanel />
+          </KeepAlivePane>
+          <KeepAlivePane active={activeTabMobile === 'serial'} className="ide-panel overflow-hidden bg-card">
+            <SerialMonitor />
+          </KeepAlivePane>
         </div>
       </div>
     );
@@ -264,44 +245,17 @@ const IDEContent: React.FC = () => {
 
                 {/* Tab Content */}
                 <div className="flex-1 overflow-hidden relative bg-card rounded-b-2xl">
-                  <AnimatePresence mode="wait">
-                    {activeTab === 'code' && (
-                      <motion.div 
-                        key="code"
-                        className="h-full w-full"
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <CodePanel />
-                      </motion.div>
-                    )}
-                    {activeTab === 'console' && (
-                      <motion.div 
-                        key="console"
-                        className="h-full w-full"
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <ConsolePanel />
-                      </motion.div>
-                    )}
-                    {activeTab === 'serial' && (
-                      <motion.div 
-                        key="serial"
-                        className="h-full w-full"
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <SerialMonitor />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {/* Las 3 pestañas quedan montadas y solo se ocultan: el monitor serial
+                      sigue conectado y recibiendo aunque estés viendo Código o Consola */}
+                  <KeepAlivePane active={activeTab === 'code'}>
+                    <CodePanel />
+                  </KeepAlivePane>
+                  <KeepAlivePane active={activeTab === 'console'}>
+                    <ConsolePanel />
+                  </KeepAlivePane>
+                  <KeepAlivePane active={activeTab === 'serial'}>
+                    <SerialMonitor />
+                  </KeepAlivePane>
                 </div>
               </Tabs>
 

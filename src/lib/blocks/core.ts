@@ -1,4 +1,5 @@
 import * as Blockly from 'blockly';
+import { getVarTypeInfo, buildCppNames, toCppName } from './variables';
 
 export const setupArduinoGenerator = (Arduino: any) => {
   // Prioridad de operadores C++
@@ -24,31 +25,41 @@ export const setupArduinoGenerator = (Arduino: any) => {
     this.definitions_ = {};
     this.setups_ = {};
     this.variables_ = {};
+    this.warnings_ = [];
 
-    // Declarar variables globales automáticamente
+    // Declarar variables globales con el tipo elegido al crearlas.
+    // varNames_: nombre visible -> nombre C++ seguro (sin palabras reservadas ni colisiones).
     const variables = workspace.getVariableMap().getAllVariables();
+    this.varNames_ = buildCppNames(variables);
     for (const variable of variables) {
-      const varName = variable.name.replace(/[^a-zA-Z0-9_]/g, '_');
-      this.variables_[varName] = `int ${varName} = 0;`;
+      const varName = this.varNames_[variable.name];
+      const info = getVarTypeInfo(variable.type);
+      this.variables_[varName] = `${info.cType} ${varName} = ${info.initValue};`;
     }
   };
 
   // Construcción del código final
+  // Siempre devuelve un programa válido. Si falta el bloque principal se genera
+  // un setup()/loop() vacío, para que el panel Código nunca muestre texto viejo (GEN-06).
   Arduino.finish = function (code: string) {
     const definitions = Object.values(this.definitions_).join('\n');
     const variables = Object.values(this.variables_).join('\n');
     const setups = Object.values(this.setups_).join('\n  ');
 
-    if (code.includes('void setup()') || code.includes('void loop()')) {
-      let patched = code;
-      if (setups.trim()) {
-        patched = patched.replace(
-          /void\s+setup\s*\(\s*\)\s*\{\s*/m,
-          (m: string) => `${m}\n  ${setups}\n`
-        );
-      }
-      return `// Generado por M4rk-IDE\n${definitions}\n${variables}\n\n${patched}`;
+    let patched = code;
+    if (!patched.includes('void setup()')) {
+      patched = `void setup() {\n}\n\nvoid loop() {\n}\n${patched ? '\n' + patched : ''}`;
     }
+    if (setups.trim()) {
+      patched = patched.replace(
+        /void\s+setup\s*\(\s*\)\s*\{[ \t]*\n?/m,
+        (m: string) => `${m.trimEnd()}\n  ${setups}\n`
+      );
+    }
+    const warnings = (this.warnings_ as string[]).map((w) => `// ⚠ ${w}`).join('\n');
+    const header = warnings ? `// Generado por M4rk-IDE\n${warnings}` : '// Generado por M4rk-IDE';
+    // Solo se incluyen las secciones con contenido, separadas por una línea en blanco
+    return [header, definitions, variables, patched.trim()].filter((s) => s.trim()).join('\n\n') + '\n';
   };
 
   Arduino.workspaceToCode = function (workspace: Blockly.Workspace) {
@@ -64,16 +75,48 @@ export const setupArduinoGenerator = (Arduino: any) => {
       'procedures_defreturn'
     ];
 
+    const mainBlockTypes = ['arduino_setup_loop', 'arduino_start'];
+    const mainName = Blockly.Msg['B_COM_SETUP_LOOP'] || 'Arduino Setup & Loop';
+    let hasMain = false;
+    let extraMain = 0;
+    let loose = 0;
+
     for (const block of blocks) {
-      if (validTopBlocks.includes(block.type)) {
-        let line = this.blockToCode(block);
-        if (Array.isArray(line)) {
-          line = line[0];
-        }
-        if (line) {
-          codeArray.push(line);
-        }
+      if (!block.isEnabled()) continue;
+      if (mainBlockTypes.includes(block.type)) {
+        // Solo se usa el primer bloque principal: dos setup() no compilan.
+        if (hasMain) { extraMain++; continue; }
+        hasMain = true;
+      } else if (!validTopBlocks.includes(block.type)) {
+        loose++;
+        continue;
       }
+      let line = this.blockToCode(block);
+      if (Array.isArray(line)) {
+        line = line[0];
+      }
+      if (line) {
+        codeArray.push(line);
+      }
+    }
+
+    // Avisos que se escriben como comentario al inicio del código (GEN-06)
+    if (!hasMain) {
+      this.warnings_.push(`Falta el bloque "${mainName}" (categoría Eventos). Arrástralo y pon tus bloques dentro.`);
+    }
+    if (loose > 0) {
+      this.warnings_.push(
+        loose === 1
+          ? `Hay 1 bloque suelto que no se incluye: debe ir dentro de "${mainName}".`
+          : `Hay ${loose} bloques sueltos que no se incluyen: deben ir dentro de "${mainName}".`
+      );
+    }
+    if (extraMain > 0) {
+      this.warnings_.push(
+        extraMain === 1
+          ? `Solo se usa un bloque "${mainName}"; el otro se ignora.`
+          : `Solo se usa un bloque "${mainName}"; se ignoran los otros ${extraMain}.`
+      );
     }
 
     let code = codeArray.join('\n');
@@ -95,7 +138,7 @@ export const setupArduinoGenerator = (Arduino: any) => {
   };
 
   Arduino.getVariableName = function (name: string) {
-    return name.replace(/[^a-zA-Z0-9_]/g, '_');
+    return (this.varNames_ && this.varNames_[name]) || toCppName(name);
   };
 
   Arduino.forBlock = Arduino.forBlock || {};

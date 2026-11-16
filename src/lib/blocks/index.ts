@@ -5,6 +5,8 @@ import { defineMotorBlocks, defineMotorGenerators } from './motors';
 import { defineSensorBlocks, defineSensorGenerators } from './sensors';
 import { defineCommsBlocks, defineCommsGenerators } from './comms';
 import { defineLogicBlocks, defineLogicGenerators } from './logic';
+import { defineVariableGenerators } from './variables';
+export { registerTypedVariables } from './variables';
 export { arduinoToolbox } from './toolbox';
 
 export const defineArduinoBlocks = () => {
@@ -25,6 +27,7 @@ export const createArduinoGenerator = (): any => {
   defineSensorGenerators(Arduino);
   defineCommsGenerators(Arduino);
   defineLogicGenerators(Arduino);
+  defineVariableGenerators(Arduino);
   
   return Arduino;
 };

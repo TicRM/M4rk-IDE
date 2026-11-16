@@ -27,7 +27,7 @@ const CodePanel: React.FC = () => {
       {/* Editor */}
       <ScrollArea className="flex-1 w-full h-full">
         <textarea
-          value={generatedCode}
+          value={generatedCode ?? ''}
           onChange={handleChange}
           className="w-full h-full min-h-[500px] bg-transparent p-5 resize-none focus:outline-none font-mono text-sm leading-7 text-foreground placeholder:text-muted-foreground"
           spellCheck={false}

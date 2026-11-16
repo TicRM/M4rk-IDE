@@ -1,9 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useIDE } from '@/contexts/IDEContext';
-import { 
-  Trash2, 
-  Send, 
-  Plug, 
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, memo } from 'react';
+import { useIDE, SerialMessage } from '@/contexts/IDEContext';
+import {
+  Trash2,
+  Send,
+  Plug,
   Unplug,
   ArrowDown,
   Radio,
@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
   SelectContent,
@@ -19,23 +18,65 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  isWebSerialSupported, 
-  requestSerialPort, 
+import {
+  isWebSerialSupported,
+  requestSerialPort,
   openSerialConnection,
   closeSerialConnection,
   writeToSerial,
   SerialConnection
 } from '@/lib/webserial';
 import { toast } from 'sonner';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const BAUD_RATES = [300, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200];
 
+// Fin de línea que se agrega al enviar (igual que el monitor del Arduino IDE).
+// Por defecto "Ninguno": enviar "1" llega a la placa exactamente como "1".
+const LINE_ENDINGS = {
+  none: { label: 'Sin fin de línea', value: '' },
+  lf: { label: 'Nueva línea (\\n)', value: '\n' },
+  cr: { label: 'Retorno (\\r)', value: '\r' },
+  crlf: { label: 'Ambos (\\r\\n)', value: '\r\n' },
+} as const;
+type LineEnding = keyof typeof LINE_ENDINGS;
+const LINE_ENDING_STORAGE_KEY = 'm4rk_serial_line_ending';
+
+// Si llega texto sin salto de línea (p. ej. Serial.print sin println),
+// se muestra tras este tiempo sin recibir más datos.
+const PARTIAL_LINE_TIMEOUT_MS = 200;
+// Las líneas recibidas se agrupan y se pintan como máximo cada 50 ms.
+const FLUSH_INTERVAL_MS = 50;
+
+const loadLineEnding = (): LineEnding => {
+  try {
+    const saved = localStorage.getItem(LINE_ENDING_STORAGE_KEY);
+    if (saved && saved in LINE_ENDINGS) return saved as LineEnding;
+  } catch { /* almacenamiento no disponible */ }
+  return 'none';
+};
+
+const SerialRow = memo(({ msg }: { msg: SerialMessage }) => (
+  <div
+    className={`py-2 px-3 rounded-xl whitespace-pre-wrap break-all ${
+      msg.type === 'sent'
+        ? 'bg-primary/10 text-primary border-l-4 border-primary ml-8'
+        : 'bg-card text-foreground border-l-4 border-success mr-8 shadow-sm'
+    }`}
+  >
+    <span className={`${msg.type === 'sent' ? 'text-primary/60' : 'text-success/60'} mr-2`}>
+      {msg.type === 'sent' ? '→' : '←'}
+    </span>
+    {msg.content === '' ? ' ' : msg.content}
+  </div>
+));
+SerialRow.displayName = 'SerialRow';
+
 const SerialMonitor: React.FC = () => {
-  const { 
-    serialMessages, 
-    addSerialMessage, 
+  const {
+    serialMessages,
+    addSerialMessage,
+    addSerialMessages,
     clearSerialMessages,
     serialBaudRate,
     setSerialBaudRate,
@@ -43,33 +84,95 @@ const SerialMonitor: React.FC = () => {
     isConnected: ideConnected,
     setIsConnected
   } = useIDE();
-  
+
   const [inputValue, setInputValue] = useState('');
   const [isMonitorConnected, setIsMonitorConnected] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [lineEnding, setLineEnding] = useState<LineEnding>(loadLineEnding);
   const connectionRef = useRef<SerialConnection | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const readLoopRef = useRef<boolean>(false);
 
-  useEffect(() => {
+  // Búfer de recepción: se acumula hasta encontrar '\n'
+  const lineBufferRef = useRef('');
+  const pendingLinesRef = useRef<string[]>([]);
+  const flushTimerRef = useRef<number | null>(null);
+  const partialTimerRef = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
     if (autoScroll && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [serialMessages, autoScroll]);
 
+  const handleLineEndingChange = (value: string) => {
+    setLineEnding(value as LineEnding);
+    try { localStorage.setItem(LINE_ENDING_STORAGE_KEY, value); } catch { /* ignorar */ }
+  };
+
+  const flushPendingLines = useCallback(() => {
+    if (flushTimerRef.current !== null) {
+      clearTimeout(flushTimerRef.current);
+      flushTimerRef.current = null;
+    }
+    const lines = pendingLinesRef.current;
+    if (lines.length > 0) {
+      pendingLinesRef.current = [];
+      addSerialMessages('received', lines);
+    }
+  }, [addSerialMessages]);
+
+  const scheduleFlush = useCallback(() => {
+    if (flushTimerRef.current === null) {
+      flushTimerRef.current = window.setTimeout(flushPendingLines, FLUSH_INTERVAL_MS);
+    }
+  }, [flushPendingLines]);
+
+  // Pasa a "líneas pendientes" lo que quedó sin salto de línea
+  const flushPartialLine = useCallback(() => {
+    if (partialTimerRef.current !== null) {
+      clearTimeout(partialTimerRef.current);
+      partialTimerRef.current = null;
+    }
+    if (lineBufferRef.current) {
+      pendingLinesRef.current.push(lineBufferRef.current.replace(/\r$/, ''));
+      lineBufferRef.current = '';
+    }
+    scheduleFlush();
+  }, [scheduleFlush]);
+
+  const handleIncomingText = useCallback((text: string) => {
+    const parts = (lineBufferRef.current + text).split('\n');
+    lineBufferRef.current = parts.pop() ?? '';
+    for (const line of parts) {
+      // println envía "\r\n": se quita el '\r' final
+      pendingLinesRef.current.push(line.replace(/\r$/, ''));
+    }
+
+    if (partialTimerRef.current !== null) {
+      clearTimeout(partialTimerRef.current);
+      partialTimerRef.current = null;
+    }
+    if (lineBufferRef.current) {
+      partialTimerRef.current = window.setTimeout(flushPartialLine, PARTIAL_LINE_TIMEOUT_MS);
+    }
+    if (pendingLinesRef.current.length > 0) scheduleFlush();
+  }, [flushPartialLine, scheduleFlush]);
+
   const startReadLoop = useCallback(async () => {
     if (!connectionRef.current?.reader) return;
-    
+
     readLoopRef.current = true;
+    lineBufferRef.current = '';
+    // stream: true conserva los bytes de una tilde/ñ partida entre dos fragmentos
     const decoder = new TextDecoder();
-    
+
     while (readLoopRef.current && connectionRef.current?.reader) {
       try {
         const { value, done } = await connectionRef.current.reader.read();
         if (done) break;
         if (value) {
-          const text = decoder.decode(value);
-          addSerialMessage('received', text);
+          handleIncomingText(decoder.decode(value, { stream: true }));
         }
       } catch (error) {
         if (readLoopRef.current) {
@@ -78,7 +181,13 @@ const SerialMonitor: React.FC = () => {
         break;
       }
     }
-  }, [addSerialMessage]);
+
+    // Mostrar lo que quedara en el búfer al terminar la lectura
+    const rest = decoder.decode();
+    if (rest) handleIncomingText(rest);
+    flushPartialLine();
+    flushPendingLines();
+  }, [handleIncomingText, flushPartialLine, flushPendingLines]);
 
   const handleConnect = async () => {
     if (!isWebSerialSupported()) {
@@ -97,7 +206,7 @@ const SerialMonitor: React.FC = () => {
       setIsConnected(true);
       addConsoleMessage('success', `Monitor serie conectado a ${serialBaudRate} baudios`);
       toast.success('¡Monitor serie conectado! 🎉');
-      
+
       startReadLoop();
     } catch (error) {
       addConsoleMessage('error', `Falló la conexión: ${error}`);
@@ -107,25 +216,30 @@ const SerialMonitor: React.FC = () => {
 
   const handleDisconnect = useCallback(async () => {
     readLoopRef.current = false;
-    
+
     if (connectionRef.current) {
       await closeSerialConnection(connectionRef.current);
       connectionRef.current = null;
     }
-    
+
     setIsMonitorConnected(false);
     setIsConnected(false);
-    
+
     addConsoleMessage('info', 'Monitor serie desconectado');
     toast.info('Monitor serie desconectado');
   }, [setIsConnected, addConsoleMessage]);
 
+  // Solo se envía si hay algo visible: espacios o campo vacío no se mandan.
+  // Se recortan los espacios de los extremos para que " 1 " llegue como "1".
+  const textToSend = inputValue.trim();
+  const canSend = isMonitorConnected && textToSend !== '';
+
   const handleSend = async () => {
-    if (!inputValue.trim() || !connectionRef.current) return;
+    if (!connectionRef.current || !canSend) return;
 
     try {
-      await writeToSerial(connectionRef.current, inputValue + '\n');
-      addSerialMessage('sent', inputValue);
+      await writeToSerial(connectionRef.current, textToSend + LINE_ENDINGS[lineEnding].value);
+      addSerialMessage('sent', textToSend);
       setInputValue('');
     } catch (error) {
       addConsoleMessage('error', `Error al enviar: ${error}`);
@@ -143,6 +257,8 @@ const SerialMonitor: React.FC = () => {
   useEffect(() => {
     return () => {
       readLoopRef.current = false;
+      if (flushTimerRef.current !== null) clearTimeout(flushTimerRef.current);
+      if (partialTimerRef.current !== null) clearTimeout(partialTimerRef.current);
       if (connectionRef.current) {
         closeSerialConnection(connectionRef.current);
       }
@@ -164,14 +280,14 @@ const SerialMonitor: React.FC = () => {
           <Radio className={`w-4 h-4 ${isMonitorConnected ? 'text-success' : 'text-muted-foreground'}`} />
           <span className="text-sm font-bold text-foreground">Monitor Serie</span>
           {isMonitorConnected && (
-            <motion.span 
+            <motion.span
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               className="status-dot status-dot-connected ml-1"
             />
           )}
         </div>
-        
+
         <div className="flex items-center gap-2 flex-wrap">
           {/* Baud Rate Selector */}
           <Select
@@ -190,7 +306,7 @@ const SerialMonitor: React.FC = () => {
               ))}
             </SelectContent>
           </Select>
-          
+
           {/* Boton de Conectar/Desconectar */}
           {isMonitorConnected ? (
             <button
@@ -209,7 +325,7 @@ const SerialMonitor: React.FC = () => {
               Conectar
             </button>
           )}
-          
+
           {/* Auto-scroll */}
           <Button
             variant="ghost"
@@ -222,28 +338,29 @@ const SerialMonitor: React.FC = () => {
           >
             <ArrowDown className="w-4 h-4" />
           </Button>
-          
+
           {/* Boton para limpiar */}
           <Button
             variant="ghost"
             size="sm"
             onClick={clearSerialMessages}
+            title="Limpiar monitor"
             className="h-9 w-9 p-0 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       </div>
-      
+
       {/* Area de Mensaje */}
-      <ScrollArea className="flex-1 bg-muted/10" ref={scrollRef}>
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto bg-muted/10">
         <div className="p-4 font-mono text-sm space-y-1.5">
           {serialMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <motion.div 
+              <motion.div
                 className={`w-20 h-20 rounded-3xl flex items-center justify-center mb-4 ${
-                  isMonitorConnected 
-                    ? 'bg-success/10 border-2 border-success/30' 
+                  isMonitorConnected
+                    ? 'bg-success/10 border-2 border-success/30'
                     : 'bg-muted/30 border-2 border-border'
                 }`}
                 animate={isMonitorConnected ? { scale: [1, 1.05, 1] } : {}}
@@ -252,51 +369,46 @@ const SerialMonitor: React.FC = () => {
                 <Zap className={`w-10 h-10 ${isMonitorConnected ? 'text-success' : 'text-muted-foreground/50'}`} />
               </motion.div>
               <p className="text-muted-foreground font-medium font-sans">
-                {isMonitorConnected 
-                  ? 'Esperando datos...' 
+                {isMonitorConnected
+                  ? 'Esperando datos...'
                   : 'Conecta para ver la salida serie'}
               </p>
             </div>
           ) : (
-            <AnimatePresence>
-              {serialMessages.map((msg) => (
-                <motion.div
-                  key={msg.id}
-                  initial={{ opacity: 0, x: msg.type === 'sent' ? 20 : -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className={`py-2 px-3 rounded-xl ${
-                    msg.type === 'sent' 
-                      ? 'bg-primary/10 text-primary border-l-4 border-primary ml-8' 
-                      : 'bg-card text-foreground border-l-4 border-success mr-8 shadow-sm'
-                  }`}
-                >
-                  {msg.type === 'sent' && (
-                    <span className="text-primary/60 mr-2">{'→'}</span>
-                  )}
-                  {msg.type === 'received' && (
-                    <span className="text-success/60 mr-2">{'←'}</span>
-                  )}
-                  {msg.content}
-                </motion.div>
-              ))}
-            </AnimatePresence>
+            serialMessages.map((msg) => <SerialRow key={msg.id} msg={msg} />)
           )}
         </div>
-      </ScrollArea>
-      
+      </div>
+
       {/* Input Area */}
-      <div className="flex items-center gap-3 p-3 border-t border-border bg-card/50">
+      <div className="flex items-center gap-2 p-3 border-t border-border bg-card/50 flex-wrap">
         <Input
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyPress}
           placeholder="Escribe un mensaje..."
           disabled={!isMonitorConnected}
-          className="neu-input flex-1 h-10 text-sm"
+          className="neu-input flex-1 min-w-[8rem] h-10 text-sm"
         />
+        {/* Fin de línea que se agrega al enviar */}
+        <Select value={lineEnding} onValueChange={handleLineEndingChange}>
+          <SelectTrigger
+            className="neu-input w-40 h-10 text-xs font-bold"
+            title="Qué se agrega al final de cada mensaje enviado"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="ide-panel border-none">
+            {(Object.keys(LINE_ENDINGS) as LineEnding[]).map((key) => (
+              <SelectItem key={key} value={key} className="font-medium rounded-lg text-xs">
+                {LINE_ENDINGS[key].label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <button
           onClick={handleSend}
-          disabled={!isMonitorConnected || !inputValue.trim()}
+          disabled={!canSend}
           className="clay-btn clay-btn-primary h-10 px-5"
         >
           <Send className="w-4 h-4" />

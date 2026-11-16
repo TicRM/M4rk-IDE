@@ -141,6 +141,11 @@ export const arduinoToolbox = {
         { kind: 'block', type: 'arduino_serial_begin' },
         { kind: 'block', type: 'arduino_serial_print' },
         { kind: 'block', type: 'arduino_serial_println' },
+        { kind: 'block', type: 'arduino_serial_read_text' },
+        { kind: 'block', type: 'arduino_serial_has_data' },
+        { kind: 'block', type: 'arduino_serial_read_number' },
+        { kind: 'block', type: 'arduino_serial_read_decimal' },
+        { kind: 'block', type: 'arduino_serial_read_char' },
         
         // WiFi
         {
@@ -160,6 +165,10 @@ export const arduinoToolbox = {
         { kind: 'block', type: 'bluetooth_setup' },
         { kind: 'block', type: 'bluetooth_send_string' },
         { kind: 'block', type: 'bluetooth_read_string' },
+        { kind: 'block', type: 'bluetooth_has_data' },
+        { kind: 'block', type: 'bluetooth_read_number' },
+        { kind: 'block', type: 'bluetooth_read_decimal' },
+        { kind: 'block', type: 'bluetooth_read_char' },
         
         // I2C
         {

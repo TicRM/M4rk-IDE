@@ -50,7 +50,13 @@ export const defineLogicGenerators = (Arduino: any) => {
   };
 
   Arduino.forBlock['arduino_text'] = function (block: Blockly.Block) {
-    const text = block.getFieldValue('TEXT');
+    // Escapar \, comillas y saltos de línea para que el texto no rompa el C++ (GEN-04)
+    const text = String(block.getFieldValue('TEXT') ?? '')
+      .replace(/\\/g, '\\\\')
+      .replace(/"/g, '\\"')
+      .replace(/\r/g, '\\r')
+      .replace(/\n/g, '\\n')
+      .replace(/\t/g, '\\t');
     return [`"${text}"`, Arduino.ORDER_ATOMIC] as [string, number];
   };
 
@@ -80,24 +86,51 @@ export const defineLogicGenerators = (Arduino: any) => {
 
   Arduino.forBlock['controls_whileUntil'] = function (block: Blockly.Block) {
     const until = block.getFieldValue('MODE') === 'UNTIL';
-    let argument0 = Arduino.valueToCode(block, 'BOOL', Arduino.ORDER_NONE) || 'false';
+    const argument0 = Arduino.valueToCode(block, 'BOOL', Arduino.ORDER_NONE) || 'false';
     const branch = Arduino.statementToCode(block, 'DO');
-    if (until) {
-      argument0 = `!${argument0}`;
-    }
-    return `while (${argument0}) {\n${branch}}\n`;
+    // "repetir hasta X" = mientras NO X. Con paréntesis: !(x > 5), no !x > 5 (GEN-15)
+    const condition = until ? `!(${argument0})` : argument0;
+    return `while (${condition}) {\n${branch}}\n`;
   };
 
   Arduino.forBlock['controls_for'] = function (block: Blockly.Block) {
     const varId = block.getFieldValue('VAR');
     const variable = block.workspace.getVariableById(varId);
-    const varName = Arduino.getVariableName(variable.name);
+    const varName = Arduino.getVariableName(variable?.name ?? 'i');
 
-    const argument0 = Arduino.valueToCode(block, 'FROM', Arduino.ORDER_ASSIGNMENT) || '0';
-    const argument1 = Arduino.valueToCode(block, 'TO', Arduino.ORDER_ASSIGNMENT) || '10';
-    const increment = Arduino.valueToCode(block, 'BY', Arduino.ORDER_ASSIGNMENT) || '1';
+    const from = Arduino.valueToCode(block, 'FROM', Arduino.ORDER_ASSIGNMENT) || '0';
+    const to = Arduino.valueToCode(block, 'TO', Arduino.ORDER_ASSIGNMENT) || '10';
+    const by = Arduino.valueToCode(block, 'BY', Arduino.ORDER_ASSIGNMENT) || '1';
     const branch = Arduino.statementToCode(block, 'DO');
-    return `for (int ${varName} = ${argument0}; ${varName} <= ${argument1}; ${varName} += ${increment}) {\n${branch}}\n`;
+
+    // Se usa la variable global (no se redeclara con "int"), así su valor se ve
+    // fuera del bucle. Como en Blockly, el sentido depende de "desde" y "hasta":
+    // de 10 a 1 cuenta hacia atrás aunque el paso sea positivo (GEN-05).
+    const isNum = (s: string) => /^-?\d+(\.\d+)?$/.test(s);
+    if (isNum(from) && isNum(to) && isNum(by)) {
+      const up = Number(from) <= Number(to);
+      const step = Math.abs(Number(by)) || 1;
+      const cmp = up ? '<=' : '>=';
+      const inc = step === 1 ? (up ? `${varName}++` : `${varName}--`) : `${varName} ${up ? '+=' : '-='} ${step}`;
+      return `for (${varName} = ${from}; ${varName} ${cmp} ${to}; ${inc}) {\n${branch}}\n`;
+    }
+
+    // Valores calculados: el sentido se decide al ejecutar.
+    const numType = variable?.type === 'Decimal' ? 'float' : 'long';
+    const start = `${varName}_desde`;
+    const end = `${varName}_hasta`;
+    const step = `${varName}_paso`;
+    return (
+      `{\n` +
+      `  ${numType} ${start} = ${from};\n` +
+      `  ${numType} ${end} = ${to};\n` +
+      `  ${numType} ${step} = abs(${by});\n` +
+      `  if (${start} > ${end}) ${step} = -${step};\n` +
+      `  for (${varName} = ${start}; ${step} > 0 ? ${varName} <= ${end} : ${varName} >= ${end}; ${varName} += ${step}) {\n` +
+      (branch ? Arduino.prefixLines(branch, '  ') : '') +
+      `  }\n` +
+      `}\n`
+    );
   };
 
   Arduino.forBlock['math_number'] = function (block: Blockly.Block) {
@@ -148,19 +181,5 @@ export const defineLogicGenerators = (Arduino: any) => {
     return [code, Arduino.ORDER_ATOMIC] as [string, number];
   };
 
-  Arduino.forBlock['variables_get'] = function (block: Blockly.Block) {
-    const varId = block.getFieldValue('VAR');
-    const variable = block.workspace.getVariableById(varId);
-    const varName = Arduino.getVariableName(variable.name);
-    return [varName, Arduino.ORDER_ATOMIC] as [string, number];
-  };
-
-  Arduino.forBlock['variables_set'] = function (block: Blockly.Block) {
-    const varId = block.getFieldValue('VAR');
-    const variable = block.workspace.getVariableById(varId);
-    const varName = Arduino.getVariableName(variable.name);
-
-    const value = Arduino.valueToCode(block, 'VALUE', Arduino.ORDER_ASSIGNMENT) || '0';
-    return `${varName} = ${value};\n`;
-  };
+  // variables_get / variables_set / math_change: ver variables.ts
 };

@@ -52,6 +52,7 @@ interface IDEContextType {
   clearConsole: () => void;
   serialMessages: SerialMessage[];
   addSerialMessage: (type: SerialMessage['type'], content: string) => void;
+  addSerialMessages: (type: SerialMessage['type'], contents: string[]) => void;
   clearSerialMessages: () => void;
   serialBaudRate: number;
   setSerialBaudRate: (rate: number) => void;
@@ -76,6 +77,14 @@ interface IDEContextType {
 }
 
 const IDEContext = createContext<IDEContextType | null>(null);
+
+// Tope de seguridad: al superarlo se descartan los mensajes más antiguos.
+// Evita que el navegador se congele si la placa imprime sin pausa.
+const MAX_CONSOLE_MESSAGES = 10000;
+const MAX_SERIAL_MESSAGES = 10000;
+
+let messageCounter = 0;
+const nextMessageId = () => `${Date.now()}-${++messageCounter}`;
 
 export const useIDE = () => {
   const context = useContext(IDEContext);
@@ -129,27 +138,27 @@ export const IDEProvider: React.FC<IDEProviderProps> = ({ children }) => {
   }, []);
 
   const addConsoleMessage = useCallback((type: ConsoleMessage['type'], message: string) => {
-    setConsoleMessages(prev => [
-      {
-      id: `${Date.now()}-${Math.random()}`,
-      type,
-      message,
-      timestamp: new Date()
-      },
-      ...prev
-    ]);
+    // Orden cronológico (el más reciente al final), como una terminal
+    setConsoleMessages(prev => {
+      const next = [...prev, { id: nextMessageId(), type, message, timestamp: new Date() }];
+      return next.length > MAX_CONSOLE_MESSAGES ? next.slice(-MAX_CONSOLE_MESSAGES) : next;
+    });
   }, []);
 
   const clearConsole = useCallback(() => setConsoleMessages([]), []);
 
-  const addSerialMessage = useCallback((type: SerialMessage['type'], content: string) => {
-    setSerialMessages(prev => [...prev.slice(-99), {
-      id: `${Date.now()}-${Math.random()}`,
-      type,
-      content,
-      timestamp: new Date()
-    }]);
+  const addSerialMessages = useCallback((type: SerialMessage['type'], contents: string[]) => {
+    if (contents.length === 0) return;
+    const timestamp = new Date();
+    setSerialMessages(prev => {
+      const next = [...prev, ...contents.map(content => ({ id: nextMessageId(), type, content, timestamp }))];
+      return next.length > MAX_SERIAL_MESSAGES ? next.slice(-MAX_SERIAL_MESSAGES) : next;
+    });
   }, []);
+
+  const addSerialMessage = useCallback((type: SerialMessage['type'], content: string) => {
+    addSerialMessages(type, [content]);
+  }, [addSerialMessages]);
 
   const clearSerialMessages = useCallback(() => setSerialMessages([]), []);
 
@@ -285,6 +294,7 @@ export const IDEProvider: React.FC<IDEProviderProps> = ({ children }) => {
     clearConsole,
     serialMessages,
     addSerialMessage,
+    addSerialMessages,
     clearSerialMessages,
     serialBaudRate,
     setSerialBaudRate,
